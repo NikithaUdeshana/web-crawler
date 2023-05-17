@@ -1,0 +1,2 @@
+class CrawlError(Exception):
+    pass
