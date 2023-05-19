@@ -8,7 +8,8 @@ class TestCrawler(TestCase):
         self.crawler = Crawler(max_depth=2, max_pages=2)
 
     def test_crawl(self):
-        result = self.crawler.crawl('https://bbc.co.uk')
+        url = 'https://bbc.co.uk'
+        result = self.crawler.crawl(url)
         self.assertIsInstance(result, dict)
         self.assertGreater(len(result), 0)
 

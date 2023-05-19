@@ -4,6 +4,11 @@ from utils.crawler import Crawler
 from werkzeug.exceptions import HTTPException
 from exception.client_exception import ClientError
 import requests
+import logging
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 class CrawlerResource(Resource):
@@ -22,8 +27,10 @@ class CrawlerResource(Resource):
             if depth <= 0 or depth > 10:
                 raise ClientError('Invalid request. Depth must be a positive integer between 1 and 10.')
 
-            crawler = Crawler(depth, 100)
-            return crawler.crawl(url)
+            crawler = Crawler(depth, 1000)
+            link_relationships = crawler.crawl(url)
+            logger.info(f'Number of pages crawled: {len(crawler.visited_pages)}')
+            return link_relationships
 
         except ValueError:
             raise ClientError('Invalid request. Depth parameter may not be valid.')

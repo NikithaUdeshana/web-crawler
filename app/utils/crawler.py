@@ -1,9 +1,10 @@
 import gevent
+import logging
 import requests
+from gevent.lock import Semaphore
 from exception.crawl_exception import CrawlError
 from urllib.parse import urlparse, urljoin
 from bs4 import BeautifulSoup
-import logging
 
 
 # Set up logging
@@ -11,17 +12,18 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Constants for error messages
-FETCH_URL_ERROR = 'Error fetching URL: {}'
-PARSE_HTML_ERROR = 'Error parsing HTML: {}'
+crawl_page_error = 'Error crawling website: {}'
+fetch_url_error = 'Error fetching URL: {}'
+parse_html_error = 'Error parsing HTML: {}'
 
 
 class Crawler:
-    def __init__(self, max_depth=3, max_pages=1000):
+    def __init__(self, max_depth=3, max_pages=100):
         self.max_depth = max_depth
         self.max_pages = max_pages
         self.visited_pages = set()
         self.link_relationships = {}
-#        self.lock = gevent.lock.BoundedSemaphore()
+        self.lock = Semaphore()
         
     def crawl(self, url, depth=0):
         if self._should_stop_crawling(url, depth):
@@ -44,18 +46,19 @@ class Crawler:
             gevent.joinall(greenlets)
             return self.link_relationships
         except Exception as e:
-            logger.error(f'Error crawling website: {str(e)}')
-            raise CrawlError(f'Error crawling website: {str(e)}')
+            logger.error(crawl_page_error.format(str(e)))
+            raise CrawlError(crawl_page_error.format(str(e)))
 
     def _mark_visited(self, url):
-#        with self.lock:
+        with self.lock:
             self.visited_pages.add(url)
 
     def _should_stop_crawling(self, url, depth):
-        return depth > self.max_depth or len(self.visited_pages) >= self.max_pages or url in self.visited_pages
+        with self.lock:
+            return depth > self.max_depth or len(self.visited_pages) >= self.max_pages or url in self.visited_pages
     
     def _add_link_relationships(self, origin, destination):
-#        with self.lock:
+        with self.lock:
             if origin in self.link_relationships:
                 self.link_relationships[origin].append(destination)
             else:
@@ -69,13 +72,14 @@ class Crawler:
             links = soup.find_all('a')
             return [link.get('href') for link in links]
         except requests.exceptions.RequestException as e:
-            logger.error(FETCH_URL_ERROR.format(str(e)))
-            raise CrawlError(FETCH_URL_ERROR.format(str(e)))
+            logger.error(fetch_url_error.format(str(e)))
+            raise CrawlError(fetch_url_error.format(str(e)))
         except Exception as e:
-            logger.error(PARSE_HTML_ERROR.format(str(e)))
-            raise CrawlError(PARSE_HTML_ERROR.format(str(e)))
+            logger.error(parse_html_error.format(str(e)))
+            raise CrawlError(parse_html_error.format(str(e)))
                     
     def print_link_relationships(self):
-        for origin, destinations in self.link_relationships.items():
-            for destination in destinations:
-                print(f"{origin} -> {destination}")
+        with self.lock:
+            for origin, destinations in self.link_relationships.items():
+                for destination in destinations:
+                    print(f"{origin} -> {destination}")
