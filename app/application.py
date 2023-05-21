@@ -1,3 +1,5 @@
+import gevent.monkey
+gevent.monkey.patch_all()
 from flask import Flask
 from flask_restful import Api
 from resources.crawler_resource import CrawlerResource
