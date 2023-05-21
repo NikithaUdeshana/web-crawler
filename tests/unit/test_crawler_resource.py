@@ -1,39 +1,38 @@
 import unittest
-from unittest import TestCase
+
 from unittest.mock import patch
 from application import create_app
 from werkzeug.exceptions import HTTPException, InternalServerError
 
 
-class TestCrawlerResource(TestCase):
+class TestCrawlerResource(unittest.TestCase):
     def setUp(self):
         self.app = create_app()
-        self.client = self.app.test_client()
+        self.test_client = self.app.test_client()
 
     def test_get_with_valid_url_and_depth(self):
         url = '/crawl?url=https://example.com&depth=2'
-        response = self.client.get(url)
+        response = self.test_client.get(url)
 
         self.assertEqual(response.status_code, 200)
 
     def test_get_with_missing_url_parameter(self):
         url = '/crawl?depth=2'
-        response = self.client.get(url)
+        response = self.test_client.get(url)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json, {'message': 'Invalid request. URL field is required.'})
 
     def test_get_with_invalid_url_parameter(self):
         url = '/crawl?url=https://example.coms'
-        response = self.client.get(url)
-        print(response)
+        response = self.test_client.get(url)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json, {'message': 'Invalid request. URL parameter may not be valid.'})
 
     def test_get_with_negative_depth_parameter(self):
         url = '/crawl?url=https://example.com&depth=-2'
-        response = self.client.get(url)
+        response = self.test_client.get(url)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json, {'message': 'Invalid request. '
@@ -41,7 +40,7 @@ class TestCrawlerResource(TestCase):
 
     def test_get_with_invalid_depth_parameter(self):
         url = '/crawl?url=https://example.com&depth=abc'
-        response = self.client.get(url)
+        response = self.test_client.get(url)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json, {'message': 'Invalid request. Depth parameter may not be valid.'})
@@ -52,7 +51,7 @@ class TestCrawlerResource(TestCase):
         mock_crawler_instance.crawl.side_effect = HTTPException('Bad Request')
 
         url = '/crawl?url=http://example.com'
-        response = self.client.get(url)
+        response = self.test_client.get(url)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.get_json(), {'message': 'Bad Request'})
@@ -63,7 +62,7 @@ class TestCrawlerResource(TestCase):
         mock_crawler_instance.crawl.side_effect = Exception('Something went wrong')
 
         url = '/crawl?url=http://example.com'
-        response = self.client.get(url)
+        response = self.test_client.get(url)
 
         self.assertEqual(response.status_code, 500)
         self.assertEqual(response.get_json(), {'message': 'Internal Server error: Something went wrong'})

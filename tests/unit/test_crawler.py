@@ -1,17 +1,20 @@
-from unittest import TestCase
+import unittest
 from utils.crawler import Crawler
 from exception.crawl_exception import CrawlError
 
 
-class TestCrawler(TestCase):
+class TestCrawler(unittest.TestCase):
     def setUp(self):
         self.crawler = Crawler(max_depth=2, max_pages=2)
 
     def test_crawl(self):
         url = 'https://bbc.co.uk'
         result = self.crawler.crawl(url)
+
         self.assertIsInstance(result, dict)
         self.assertGreater(len(result), 0)
+
+    # Need to add more test cases here
 
     def test_mark_visited(self):
         url = 'https://example.com/'
@@ -54,6 +57,7 @@ class TestCrawler(TestCase):
         # Test fetching links from a valid URL
         url = "http://example.com"
         links = self.crawler._fetch_page_links(url)
+
         self.assertTrue(isinstance(links, list))
         self.assertGreater(len(links), 0)
 
