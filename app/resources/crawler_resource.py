@@ -16,6 +16,7 @@ class CrawlerResource(Resource):
         try:
             url = request.args.get('url')
             depth = int(request.args.get('depth', 1))
+            no_of_pages = int(request.args.get('no_of_pages', 50))
 
             if not url:
                 raise ClientError('Invalid request. URL field is required.')
@@ -24,16 +25,20 @@ class CrawlerResource(Resource):
             response.raise_for_status()  # Raise an exception for non-200 status codes
 
 #           TO_DO:max_depth parameter needs to be configured
-            if depth <= 0 or depth > 10:
-                raise ClientError('Invalid request. Depth must be a positive integer between 1 and 10.')
+            if depth <= 0:
+                raise ClientError('Invalid request. Depth must be a positive number.')
 
-            crawler = Crawler(depth, 1000)
+#           TO_DO:max_pages parameter needs to be configured
+            if no_of_pages <= 0:
+                raise ClientError('Invalid request. No_of_pages must be a positive number.')
+
+            crawler = Crawler(depth, no_of_pages)
             link_relationships = crawler.crawl(url)
             logger.info(f'Number of pages crawled: {len(crawler.visited_pages)}')
             return link_relationships
 
         except ValueError:
-            raise ClientError('Invalid request. Depth parameter may not be valid.')
+            raise ClientError('Invalid request. Depth or No_of_pages parameter may not be valid.')
 
         except requests.exceptions.RequestException:
             raise ClientError('Invalid request. URL parameter may not be valid.')
