@@ -1,6 +1,7 @@
 import gevent
 import logging
 import requests
+from gevent.pool import Pool
 from gevent.lock import Semaphore
 from exception.crawl_exception import CrawlError
 from urllib.parse import urlparse, urljoin
@@ -18,14 +19,16 @@ parse_html_error = 'Error parsing HTML: {}'
 
 
 class Crawler:
-    def __init__(self, max_depth=3, max_pages=100):
+    def __init__(self, max_depth=3, max_pages=100, pool_size=100):
         self.max_depth = max_depth
         self.max_pages = max_pages
         self.visited_pages = set()
         self.link_relationships = {}
         self.lock = Semaphore()
+        self.pool = Pool(size=pool_size)
         
     def crawl(self, url, depth=0):
+
         if self._should_stop_crawling(url, depth):
             return
         
@@ -42,7 +45,8 @@ class Crawler:
                     if page_url.startswith(base_url):
                         self._add_link_relationships(url, page_url)
     #                    self.crawl(page_url, depth + 1)
-                        greenlets.append(gevent.spawn(self.crawl, page_url, depth + 1))
+    #                    greenlets.append(gevent.spawn(self.crawl, page_url, depth + 1))
+                        greenlets.append(self.pool.spawn(self.crawl, page_url, depth + 1))
             gevent.joinall(greenlets)
             return self.link_relationships
         except Exception as e:
