@@ -2,7 +2,7 @@ import unittest
 
 from unittest.mock import patch
 from application import create_app
-from werkzeug.exceptions import HTTPException, InternalServerError
+from werkzeug.exceptions import HTTPException
 
 
 class TestCrawlerResource(unittest.TestCase):
@@ -36,14 +36,31 @@ class TestCrawlerResource(unittest.TestCase):
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json, {'message': 'Invalid request. '
-                                                    'Depth must be a positive integer between 1 and 10.'})
+                                                    'Depth must be a positive number.'})
 
     def test_get_with_invalid_depth_parameter(self):
         url = '/crawl?url=https://example.com&depth=abc'
         response = self.test_client.get(url)
 
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json, {'message': 'Invalid request. Depth parameter may not be valid.'})
+        self.assertEqual(response.json, {'message': 'Invalid request. Depth or No_of_pages '
+                                                    'parameter may not be valid.'})
+
+    def test_get_with_negative_no_of_pages_parameter(self):
+        url = '/crawl?url=https://example.com&no_of_pages=-2'
+        response = self.test_client.get(url)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json, {'message': 'Invalid request. '
+                                                    'No_of_pages must be a positive number.'})
+
+    def test_get_with_invalid_no_of_pages_parameter(self):
+        url = '/crawl?url=https://example.com&no_of_pages=abc'
+        response = self.test_client.get(url)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json, {'message': 'Invalid request. Depth or '
+                                                    'No_of_pages parameter may not be valid.'})
 
     @patch('resources.crawler_resource.Crawler')
     def test_get_with_http_exception(self, mock_crawler):
