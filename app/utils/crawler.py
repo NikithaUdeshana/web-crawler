@@ -28,7 +28,6 @@ class Crawler:
         self.pool = Pool(size=pool_size)
         
     def crawl(self, url, depth=0):
-
         if self._should_stop_crawling(url, depth):
             return
         
@@ -59,7 +58,7 @@ class Crawler:
 
     def _should_stop_crawling(self, url, depth):
         with self.lock:
-            return depth > self.max_depth or len(self.visited_pages) >= self.max_pages or url in self.visited_pages
+            return depth >= self.max_depth or len(self.visited_pages) >= self.max_pages or url in self.visited_pages
     
     def _add_link_relationships(self, origin, destination):
         with self.lock:
