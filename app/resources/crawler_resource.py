@@ -12,7 +12,14 @@ logger = logging.getLogger(__name__)
 
 
 class CrawlerResource(Resource):
+    """CrawlerResource class exposes the crawling functionality via an endpoint
+    """
+
     def get(self):
+        """CrawlerResource get method is used to define the `/crawl` endpoint
+
+        :return: JSON dictionary of page links.
+        """
         try:
             url = request.args.get('url')
             depth = int(request.args.get('depth', 1))
