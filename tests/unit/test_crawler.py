@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 from utils.crawler import Crawler
 from exception.crawl_exception import CrawlError
 
@@ -7,8 +8,21 @@ class TestCrawler(unittest.TestCase):
     def setUp(self):
         self.crawler = Crawler(max_depth=2, max_pages=2)
 
-    def test_crawl(self):
-        url = 'https://bbc.co.uk'
+    @patch('utils.crawler.requests.get')
+    def test_crawl(self, mock_get):
+        # Mock response from requests.get()
+        mock_response = mock_get.return_value
+        mock_response.status_code = 200
+        mock_response.text = """
+                                <html>
+                                    <body>
+                                        <a href="/page1.html">Page 1</a>
+                                        <a href="/page2.html">Page 2</a>
+                                    </body>
+                                </html>
+                             """
+
+        url = "http://example.com"
         result = self.crawler.crawl(url)
 
         self.assertIsInstance(result, dict)
@@ -53,16 +67,29 @@ class TestCrawler(unittest.TestCase):
         self.assertEqual(self.crawler.link_relationships["http://example.com"],
                          ["http://example.com/page1", "http://example.com/page2"])
 
-    def test_fetch_page_links(self):
+    @patch('utils.crawler.requests.get')
+    def test_fetch_page_links(self, mock_get):
+        # Mock response from requests.get()
+        mock_response = mock_get.return_value
+        mock_response.status_code = 200
+        mock_response.text = """
+                                <html>
+                                    <body>
+                                        <a href="/page1.html">Page 1</a>
+                                        <a href="/page2.html">Page 2</a>
+                                    </body>
+                                </html>
+                             """
         # Test fetching links from a valid URL
         url = "http://example.com"
         links = self.crawler._fetch_page_links(url)
 
         self.assertTrue(isinstance(links, list))
-        self.assertGreater(len(links), 0)
+        self.assertEqual(len(links), 2)
 
+    def test_fetch_page_links_with_invalid_URL(self):
         # Test fetching links from a non-existing URL
-        url = "http://example.coms"
+        url = "bttp://example.com"
         with self.assertRaises(CrawlError):
             self.crawler._fetch_page_links(url)
 
