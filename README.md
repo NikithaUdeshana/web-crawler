@@ -22,8 +22,9 @@ Use `/crawl` endpoint with the following parameters:
 
 * url
 * depth
+* no_of_pages
 
-It will return a JSON dictionary with all links within the given domain and with all the associated links per each given page link. Depth parameter defines how deep that you want to crawl using the Web Crawler in the page hierarchy of the website.
-Sample curl command is given below.
+It will return a JSON dictionary with all page links within a given domain and with all the associated links per each given page link. Depth parameter defines how deep that you want to crawl using the Web Crawler in the page hierarchy of the website. No_of_pages parameter defines the maximum pages that needs to be crawled using the web crawler.
+A sample curl command is given below.
 
-    curl "http://127.0.0.1:5000/crawl?url=https://bbc.co.uk&depth=3"
+    curl "http://127.0.0.1:5000/crawl?url=https://bbc.co.uk&depth=3&no_of_pages=50"
